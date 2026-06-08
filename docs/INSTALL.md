@@ -191,7 +191,8 @@ tail -20 ~/printer_data/logs/sync-caps.log
 | Файл есть, нет превью | Проверить лог; вручную: `curl -X POST "http://127.0.0.1:7125/server/files/metascan" -d '{"jsonrpc":"2.0","method":"server.files.metascan","params":{"filename":"caps/имя.gcode"},"id":1}'` |
 | Печать активна | Дождаться окончания или `BLOCK_WHILE_PRINTING=0` |
 | Второй принтер без метаданных | Убедиться, что `MOONRAKER_PORTS` содержит оба порта |
-| `RUN_SHELL_COMMAND` unknown | Добавить `[gcode_shell_command]` / обновить Klipper, KIAUH |
+| `gcode_shell_command … is not a valid config section` | Установить расширение `gcode_shell_command.py` в `klipper/klippy/extras/` (KIAUH → Advanced → Shell Command), перезапустить Klipper |
+| `RUN_SHELL_COMMAND` unknown | То же — расширение не установлено или Klipper не перезапущен |
 
 Лог: `~/printer_data/logs/sync-caps.log`
 
