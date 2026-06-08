@@ -116,7 +116,8 @@ run_rsync() {
 
   local itemize_log
   itemize_log="$(mktemp)"
-  trap 'rm -f "$itemize_log"' RETURN
+  # Путь подставляем при установке trap: при RETURN local уже снят, set -u даёт unbound
+  trap "rm -f '${itemize_log}'" RETURN
 
   log "rsync ${REMOTE} -> ${LOCAL_CAPS}/"
   if ! rsync "${RSYNC_OPTS[@]}" --itemize-changes \
@@ -125,9 +126,11 @@ run_rsync() {
   fi
 
   # Строки с передачей файла: >f, *f, и т.д. (см. man rsync --itemize-changes)
+  # Паттерн в переменной: иначе bash парсит «>» в [[ =~ ]] как перенаправление
+  local itemize_re='^[>*hc\.][fdLCS\.]'
   local changed_rels=""
   while IFS= read -r line; do
-    [[ "$line" =~ ^[>\*hc\.][fdLCS\.] ]] || continue
+    [[ "$line" =~ $itemize_re ]] || continue
     local name="${line##* }"
     [[ -z "$name" || "$name" == "./" ]] && continue
     if [[ -f "${LOCAL_CAPS}/${name}" ]]; then
