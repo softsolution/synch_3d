@@ -188,7 +188,7 @@ tail -20 ~/printer_data/logs/sync-caps.log
 |---------|----------|
 | `Permission denied (publickey)` | `ssh-copy-id` на мастер, проверить `authorized_keys` |
 | `No such file or directory` remote | На мастере есть `~/gcodes/caps/` и путь в `MASTER_CAPS_PATH` |
-| Файл есть, нет превью | Проверить лог; вручную: `curl -X POST "http://127.0.0.1:7125/server/files/metascan" -d '{"jsonrpc":"2.0","method":"server.files.metascan","params":{"filename":"caps/имя.gcode"},"id":1}'` |
+| Файл есть, нет превью | Проверить лог; вручную: `curl -sS -X POST "http://127.0.0.1:7125/server/jsonrpc" -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"server.files.metascan","params":{"filename":"caps/имя.gcode"},"id":1}'` |
 | Печать активна | Дождаться окончания или `BLOCK_WHILE_PRINTING=0` |
 | Второй принтер без метаданных | Убедиться, что `MOONRAKER_PORTS` содержит оба порта |
 | `gcode_shell_command … is not a valid config section` | Установить расширение `gcode_shell_command.py` в `klipper/klippy/extras/` (KIAUH → Advanced → Shell Command), перезапустить Klipper |

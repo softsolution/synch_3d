@@ -3,7 +3,7 @@
 # После копирования — metascan на всех экземплярах Moonraker на этом хосте.
 set -euo pipefail
 
-CONFIG="${SYNC_CAPS_CONFIG:-$HOME/printer_data/config/sync-caps.env}"
+CONFIG="${SYNC_CAPS_CONFIG:-$HOME/printer_fbg58_data/config/sync-caps.env}"
 if [[ -f "$CONFIG" ]]; then
   # shellcheck source=/dev/null
   source "$CONFIG"
@@ -12,7 +12,7 @@ fi
 : "${MASTER_IP:?Задайте MASTER_IP в $CONFIG}"
 : "${MASTER_USER:=pi}"
 : "${MASTER_CAPS_PATH:=gcodes/caps}"
-: "${GCODES_ROOT:=$HOME/printer_data/gcodes}"
+: "${GCODES_ROOT:=$HOME/printer_fbg58_data/gcodes}"
 : "${SYNC_SUBDIR:=caps}"
 : "${MOONRAKER_HOST:=127.0.0.1}"
 : "${MOONRAKER_PORTS:=7125}"
@@ -21,7 +21,7 @@ fi
 : "${RSYNC_CHECKSUM:=0}"
 : "${RSYNC_TIMEOUT:=600}"
 : "${FORCE_MASTER_MODE:=0}"
-: "${LOG_FILE:=$HOME/printer_data/logs/sync-caps.log}"
+: "${LOG_FILE:=$HOME/printer_fbg58data/logs/sync-caps.log}"
 
 LOCAL_CAPS="${GCODES_ROOT%/}/${SYNC_SUBDIR}"
 REMOTE="${MASTER_USER}@${MASTER_IP}:${MASTER_CAPS_PATH%/}/"
@@ -48,7 +48,8 @@ local_ip_matches_master() {
 moonraker_curl() {
   local port="$1"
   shift
-  curl -sfS --max-time 30 "$@" "http://${MOONRAKER_HOST}:${port}/"
+  # JSON-RPC over HTTP: POST /server/jsonrpc (POST на / даёт 405 в Moonraker ≥0.10)
+  curl -sfS --max-time 30 "$@" "http://${MOONRAKER_HOST}:${port}/server/jsonrpc"
 }
 
 is_printing_on_port() {
@@ -81,7 +82,7 @@ assert_not_printing() {
 metascan_file() {
   local port="$1"
   local rel="$2"
-  moonraker_curl "$port" -X POST \
+  moonraker_curl "$port" \
     -H "Content-Type: application/json" \
     -d "{\"jsonrpc\":\"2.0\",\"method\":\"server.files.metascan\",\"params\":{\"filename\":\"${rel}\"},\"id\":2}" \
     >/dev/null 2>&1 || log "WARN: metascan не удался :${port} ${rel}"
