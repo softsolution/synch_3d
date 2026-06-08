@@ -74,22 +74,38 @@ SSH на хост:
 ```bash
 cd ~/sync-install/scripts
 chmod +x install-on-host.sh sync-caps.sh
+```
+
+Стандартный путь `~/printer_data/config`:
+
+```bash
+SYNC_INSTALL_USER=pi ./install-on-host.sh
+```
+
+Если каталоги Klipper названы иначе (пример: `fbg51_data` и `fbg52_data`, пользователь `klipper`):
+
+```bash
+SYNC_INSTALL_USER=klipper \
+SYNC_CONFIG_DIR=/home/klipper/fbg51_data/config \
+SYNC_CONFIG_DIRS="/home/klipper/fbg51_data/config /home/klipper/fbg52_data/config" \
 ./install-on-host.sh
 ```
+
+`sync-caps.env` создаётся в `SYNC_CONFIG_DIR`; `sync-caps.cfg` — в каждом каталоге из `SYNC_CONFIG_DIRS`.
 
 Отредактируйте конфиг:
 
 ```bash
-nano ~/printer_data/config/sync-caps.env
+nano ~/fbg51_data/config/sync-caps.env   # ваш реальный путь
 ```
 
 Обязательно проверьте:
 
 ```bash
 MASTER_IP=192.168.1.10          # IP головного
-MASTER_USER=pi
+MASTER_USER=klipper               # пользователь SSH на мастере
 MASTER_CAPS_PATH=gcodes/caps      # на мастере
-GCODES_ROOT=/home/pi/printer_data/gcodes   # реальный путь к общему gcodes
+GCODES_ROOT=/home/klipper/fbg51_data/gcodes   # общий gcodes (симлинк с обоих принтеров)
 MOONRAKER_PORTS="7125 7126"     # оба экземпляра; если второй на другом порту — укажите свой
 ```
 
