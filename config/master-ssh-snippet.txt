@@ -1,0 +1,12 @@
+# На головном хосте (мастер) — ~/.ssh/authorized_keys
+# Добавьте pub-ключи со всех 7 slave-хостов (пользователь pi).
+# Ограничение только чтением rsync (опционально, для каждого slave отдельная строка):
+#
+# command="rsync --server --sender -vlogDtprze.iLsfxCIvu --delete . gcodes/caps/",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-ed25519 AAAA... slave-host-02
+#
+# Проще (для старта): обычный ключ без command= — полный SSH пользователя pi на мастер.
+# Рекомендуется отдельный пользователь syncread с chroot или только каталог gcodes — по желанию.
+
+# Убедитесь, что на мастере существует каталог:
+#   /home/pi/gcodes/caps/
+# и что симлинки printer_*_data/gcodes указывают на общий gcodes, как на остальных хостах.
