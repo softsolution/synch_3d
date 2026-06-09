@@ -29,7 +29,11 @@ fi
 SCRIPT_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/sync-caps.sh"
 ENV_EXAMPLE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/config/sync-caps.env.example"
 SNIPPET_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/config/printer.sync-caps.snippet.cfg"
-SHELL_CMD="SYNC_CAPS_CONFIG=${CONFIG_DIR}/sync-caps.env ${BIN_DIR}/sync-caps.sh"
+# gcode_shell_command вызывает subprocess без shell — VAR=value перед командой не работает.
+# Нужен env: env SYNC_CAPS_CONFIG=... /path/sync-caps.sh
+shell_cmd_for_config() {
+  printf 'env SYNC_CAPS_CONFIG=%s/sync-caps.env %s/sync-caps.sh' "$1" "$BIN_DIR"
+}
 
 if [[ "$(id -un)" != "$INSTALL_USER" ]]; then
   echo "Запустите от пользователя ${INSTALL_USER}: sudo -E -u ${INSTALL_USER} $0"
@@ -39,6 +43,11 @@ fi
 mkdir -p "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR"
 
 install -m 755 "$SCRIPT_SRC" "${BIN_DIR}/sync-caps.sh"
+
+if grep -qE '\[\[.*=~|=~' "${BIN_DIR}/sync-caps.sh" 2>/dev/null; then
+  echo "ERROR: ${BIN_DIR}/sync-caps.sh содержит [[ =~ ]] — Klipper падает на строке с «>». Обновите scripts/sync-caps.sh из репозитория."
+  exit 1
+fi
 
 if [[ ! -f "${CONFIG_DIR}/sync-caps.env" ]]; then
   sed -e "s|/home/pi/printer_data|${DATA_ROOT}|g" \
@@ -53,6 +62,7 @@ fi
 for cfg_dir in "${ALL_CONFIG_DIRS[@]}"; do
   mkdir -p "$cfg_dir"
   if [[ ! -f "${cfg_dir}/sync-caps.cfg" ]]; then
+    SHELL_CMD="$(shell_cmd_for_config "$cfg_dir")"
     sed "s|command: /home/pi/bin/sync-caps.sh|command: ${SHELL_CMD}|" \
       "$SNIPPET_SRC" > "${cfg_dir}/sync-caps.cfg"
     chmod 644 "${cfg_dir}/sync-caps.cfg"
@@ -63,7 +73,14 @@ for cfg_dir in "${ALL_CONFIG_DIRS[@]}"; do
       echo "  [include sync-caps.cfg]"
     fi
   else
-    echo "Файл ${cfg_dir}/sync-caps.cfg уже существует"
+    SHELL_CMD="$(shell_cmd_for_config "$cfg_dir")"
+    if grep -q '^command:' "${cfg_dir}/sync-caps.cfg" && \
+       ! grep -q "^command: env SYNC_CAPS_CONFIG=" "${cfg_dir}/sync-caps.cfg"; then
+      sed -i "s|^command:.*|command: ${SHELL_CMD}|" "${cfg_dir}/sync-caps.cfg"
+      echo "Обновлён command: в ${cfg_dir}/sync-caps.cfg (env SYNC_CAPS_CONFIG=…)"
+    else
+      echo "Файл ${cfg_dir}/sync-caps.cfg уже существует"
+    fi
   fi
 done
 

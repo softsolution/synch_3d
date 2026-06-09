@@ -42,13 +42,15 @@ mkdir -p ~/gcodes/caps
 ls -la ~/printer_data/gcodes
 ```
 
-Заливайте gcode только в `caps/` (вручную, WinSCP, SMB — как удобно).
+Заливайте gcode только в `caps/` (вручную, WinSCP, SMB — или скриптом с Windows, см. **[WINDOWS.md](WINDOWS.md)**).
 
 ---
 
 ## Шаг 2. Копирование файлов с Windows
 
-Из PowerShell (путь к этой папке на ПК):
+**Синхронизация gcode на мастер** (push caps + metascan): **[WINDOWS.md](WINDOWS.md)**.
+
+**Развёртывание скриптов** на хосты — из PowerShell (путь к этой папке на ПК):
 
 ```powershell
 $SRC = "C:\OSPanel\home\sync"
@@ -193,6 +195,8 @@ tail -20 ~/printer_data/logs/sync-caps.log
 | Второй принтер без метаданных | Убедиться, что `MOONRAKER_PORTS` содержит оба порта |
 | `gcode_shell_command … is not a valid config section` | Установить расширение `gcode_shell_command.py` в `klipper/klippy/extras/` (KIAUH → Advanced → Shell Command), перезапустить Klipper |
 | `RUN_SHELL_COMMAND` unknown | То же — расширение не установлено или Klipper не перезапущен |
+| `FileNotFoundError: … 'SYNC_CAPS_CONFIG=…'` в klippy.log, по SSH скрипт ок | В `sync-caps.cfg` замените `command:` на `env SYNC_CAPS_CONFIG=…/sync-caps.env /home/…/bin/sync-caps.sh` (Klipper не запускает shell, `VAR=value cmd` не работает). Перезапустите Klipper |
+| `syntax error … unexpected token '>'` на строке ~130, макрос сразу «finished» | На хосте **старая** `/home/klipper/bin/sync-caps.sh` (в новой версии строка 130 — комментарий, в логе будет `rev 2025-06-09-grep-itemize`). Скопируйте свежий скрипт: `scp scripts/sync-caps.sh klipper@IP:/home/klipper/bin/sync-caps.sh` и `chmod +x`. Проверка: `grep -n '=~' /home/klipper/bin/sync-caps.sh` — вывода быть не должно |
 
 Лог: `~/printer_data/logs/sync-caps.log`
 

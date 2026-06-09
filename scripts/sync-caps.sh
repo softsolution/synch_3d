@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Синхронизация ~/gcodes/caps с головного хоста (pull через rsync).
 # После копирования — metascan на всех экземплярах Moonraker на этом хосте.
+# SYNC_CAPS_SCRIPT_REV — меняется при правках; смотрите в логе после деплоя.
+SYNC_CAPS_SCRIPT_REV="2025-06-09-grep-itemize"
 set -euo pipefail
 
 CONFIG="${SYNC_CAPS_CONFIG:-$HOME/printer_fbg58_data/config/sync-caps.env}"
@@ -126,18 +128,16 @@ run_rsync() {
     die "rsync завершился с ошибкой"
   fi
 
-  # Строки с передачей файла: >f, *f, и т.д. (см. man rsync --itemize-changes)
-  # Паттерн в переменной: иначе bash парсит «>» в [[ =~ ]] как перенаправление
-  local itemize_re='^[>*hc\.][fdLCS\.]'
+  # Строки с передачей файла: >f, *f, … (man rsync --itemize-changes).
+  # grep, не [[ =~ ]]: bash в Klipper/старых сборках ломается на «>» в regex.
   local changed_rels=""
   while IFS= read -r line; do
-    [[ "$line" =~ $itemize_re ]] || continue
     local name="${line##* }"
     [[ -z "$name" || "$name" == "./" ]] && continue
     if [[ -f "${LOCAL_CAPS}/${name}" ]]; then
       changed_rels+="${SYNC_SUBDIR}/${name}"$'\n'
     fi
-  done < "$itemize_log"
+  done < <(grep -E '^[>*hc.][fdLCS.]' "$itemize_log" 2>/dev/null || true)
 
   if [[ -n "$changed_rels" ]]; then
     log "metascan для изменённых файлов…"
@@ -149,7 +149,7 @@ run_rsync() {
 }
 
 main() {
-  log "=== sync-caps start (pid $$) ==="
+  log "=== sync-caps start (pid $$, rev ${SYNC_CAPS_SCRIPT_REV}) ==="
 
   if local_ip_matches_master; then
     log "Этот хост — мастер (${MASTER_IP}). Rsync пропущен, обновляем метаданные Moonraker."

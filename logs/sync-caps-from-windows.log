@@ -1,0 +1,9 @@
+[2026-06-08 22:09:19] === sync-caps-from-windows start (pid 488) ===
+[2026-06-08 22:09:19] rsync /d/YandexDisk/3D/Models/22_Заглушки/gcodes/ -> klipper@192.168.1.109:gcodes/caps/
+scripts/sync-caps-from-windows.sh: line 73: rsync: command not found
+[2026-06-08 22:09:19] ERROR: rsync завершился с ошибкой
+[2026-06-08 22:13:40] === sync-caps-from-windows start (pid 1699) ===
+[2026-06-08 22:13:41] WARN: scp не удаляет лишние файлы на мастере (RSYNC_DELETE игнорируется). Для зеркала установите rsync.
+[2026-06-08 22:13:41] scp /d/YandexDisk/3D/Models/22_Заглушки/gcodes/ -> klipper@192.168.1.109:gcodes/caps/ (rsync не найден, используется OpenSSH scp)
+klipper@192.168.1.109: Permission denied (publickey,password).
+[2026-06-08 22:13:41] ERROR: не удалось создать каталог на мастере: gcodes/caps
